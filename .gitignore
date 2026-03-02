@@ -1,0 +1,4 @@
+.venv/
+output/
+.env
+strava_tokens.json
