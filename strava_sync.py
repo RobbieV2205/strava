@@ -47,50 +47,6 @@ TOKEN_URL = "https://www.strava.com/oauth/token"
 
 # ── SQL ───────────────────────────────────────────────────────────────────────
 
-CREATE_TABLE_SQL = """
-CREATE TABLE IF NOT EXISTS runs (
-    id                       BIGINT PRIMARY KEY,
-    name                     VARCHAR(255),
-    sport_type               VARCHAR(50),
-    distance                 FLOAT COMMENT 'meters',
-    moving_time              INT   COMMENT 'seconds',
-    elapsed_time             INT   COMMENT 'seconds',
-    total_elevation_gain     FLOAT COMMENT 'meters',
-    elev_high                FLOAT,
-    elev_low                 FLOAT,
-    start_date               DATETIME,
-    start_date_local         DATETIME,
-    timezone                 VARCHAR(100),
-    average_speed            FLOAT COMMENT 'm/s',
-    max_speed                FLOAT COMMENT 'm/s',
-    average_cadence          FLOAT,
-    average_watts            FLOAT,
-    max_watts                INT,
-    weighted_average_watts   INT,
-    kilojoules               FLOAT,
-    average_heartrate        FLOAT,
-    max_heartrate            FLOAT,
-    suffer_score             INT,
-    calories                 FLOAT,
-    kudos_count              INT,
-    comment_count            INT,
-    achievement_count        INT,
-    pr_count                 INT,
-    start_latlng             JSON,
-    end_latlng               JSON,
-    map_summary_polyline     LONGTEXT,
-    gear_id                  VARCHAR(50),
-    commute                  TINYINT(1),
-    trainer                  TINYINT(1),
-    manual                   TINYINT(1),
-    private                  TINYINT(1),
-    flagged                  TINYINT(1),
-    workout_type             INT,
-    description              TEXT,
-    imported_at              DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-"""
-
 COLUMNS = [
     "name", "sport_type", "distance", "moving_time", "elapsed_time",
     "total_elevation_gain", "elev_high", "elev_low",
@@ -219,14 +175,6 @@ def _connect() -> mysql.connector.MySQLConnection:
         database=MYSQL_DATABASE,
     )
 
-
-def _ensure_table(conn):
-    cur = conn.cursor()
-    cur.execute(CREATE_TABLE_SQL)
-    conn.commit()
-    cur.close()
-
-
 # ── Import ────────────────────────────────────────────────────────────────────
 
 def _parse_datetime(value: str | None) -> str | None:
@@ -284,10 +232,9 @@ def main():
     # Stap 1 — Strava token ophalen
     token = _get_access_token()
 
-    # Stap 2 — Verbinden en tabel aanmaken
+    # Stap 2 — Verbinden verbinden met database
     print(f"[mysql] Verbinden als {MYSQL_USER}...")
     conn = _connect()
-    _ensure_table(conn)
 
     # Stap 3 — Runs ophalen en wegschrijven
     runs = _fetch_runs(token)
