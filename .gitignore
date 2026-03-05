@@ -1,5 +1,4 @@
 .venv/
-output/
 .env
 strava_tokens.json
 __pycache__/
