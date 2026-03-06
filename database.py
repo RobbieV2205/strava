@@ -1,9 +1,12 @@
 import json
+import logging
 import os
 from datetime import datetime
 
 import mysql.connector
 from dotenv import load_dotenv
+
+log = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -167,4 +170,4 @@ def upsert_runs(conn, runs: list[dict]):
             skipped += 1
     conn.commit()
     cur.close()
-    print(f"[mysql] {inserted} nieuw  |  {updated} bijgewerkt  |  {skipped} ongewijzigd")
+    log.info("[mysql] %d nieuw  |  %d bijgewerkt  |  %d ongewijzigd", inserted, updated, skipped)
