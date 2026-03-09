@@ -177,4 +177,4 @@ def upsert_runs(conn, runs: list[dict]):
             skipped += 1
     conn.commit()
     cur.close()
-    log.info("[mysql] %d new  |  %d changed  |  %d unchanged", inserted, updated, skipped)
+    log.info("[mysql] new: %d  | changed: %d | unchanged: %d ", inserted, updated, skipped)
