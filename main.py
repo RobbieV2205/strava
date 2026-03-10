@@ -5,6 +5,7 @@ Strava Sync
 Creates database and user (if needed) and sync's all runs to database.
 """
 
+import os
 import time
 import logging
 import logging.handlers
@@ -44,6 +45,8 @@ def ensure_env():
 def sync_once():
     """funtion used in the loop the sync the strava data to the database. """
 
+    load_dotenv(_ENV_PATH, override=True)
+
     # Collect necessary data from .env variables
     from database import (
         ROOT_PASSWORD, MYSQL_PASSWORD, MYSQL_USER, MYSQL_DATABASE, MYSQL_HOST,
@@ -58,7 +61,8 @@ def sync_once():
     if not MYSQL_PASSWORD:
         raise RuntimeError("MYSQL_PASSWORD missing in .env")
 
-    setup_database()
+    if os.getenv("Database_Created", "0") != "1":
+        setup_database()
 
     conn = connect()
 

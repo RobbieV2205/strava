@@ -9,6 +9,7 @@ import json
 import logging
 import os
 from datetime import datetime
+from pathlib import Path
 
 import mysql.connector
 from dotenv import load_dotenv
@@ -119,6 +120,13 @@ def setup_database():
     print(f"[setup] User `{MYSQL_USER}` setup with the correct credentials `{MYSQL_DATABASE}`.")
     cur.close()
     conn.close()
+
+    env_path = Path(__file__).parent / ".env"
+    if env_path.exists():
+        content = env_path.read_text(encoding="utf-8")
+        content = content.replace("Database_Created=0", "Database_Created=1")
+        env_path.write_text(content, encoding="utf-8")
+        log.info("[setup] Database_Created set to 1 in .env")
 
 
 def connect() -> mysql.connector.MySQLConnection:
