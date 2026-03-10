@@ -50,7 +50,7 @@ def sync_once():
     # Collect necessary data from .env variables
     from database import (
         ROOT_PASSWORD, MYSQL_PASSWORD, MYSQL_USER, MYSQL_DATABASE, MYSQL_HOST,
-        setup_database, connect, create_table, upsert_runs,
+        setup_database, connect, upsert_runs,
     )
     from strava_api import CLIENT_ID, CLIENT_SECRET, get_access_token, fetch_all_runs
 
