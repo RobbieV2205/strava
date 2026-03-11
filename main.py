@@ -5,7 +5,6 @@ Strava Sync
 Creates database and user (if needed) and sync's all runs to database.
 """
 
-import os
 import time
 import logging
 import logging.handlers
