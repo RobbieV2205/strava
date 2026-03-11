@@ -12,6 +12,8 @@ import logging.handlers
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
+import mysql.connector
+
 
 # Configure the logging system.
 _LOG_PATH = Path(__file__).parent / "strava_sync.log"
@@ -61,10 +63,11 @@ def sync_once():
     if not MYSQL_PASSWORD:
         raise RuntimeError("MYSQL_PASSWORD missing in .env")
 
-    if os.getenv("Database_Created", "0") != "1":
+    try:
+        conn = connect()
+    except mysql.connector.Error:
         setup_database()
-
-    conn = connect()
+        conn = connect()
 
     token = get_access_token()
 
