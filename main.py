@@ -52,16 +52,6 @@ def ensure_env():
     if not MYSQL_PASSWORD:
         raise RuntimeError("MYSQL_PASSWORD missing in .env")
     
-    if not CLIENT_ID or not CLIENT_SECRET:
-        log.critical("STRAVA_CLIENT_ID or STRAVA_CLIENT_SECRET is missing in .env")
-        raise SystemExit("STRAVA_CLIENT_ID or STRAVA_CLIENT_SECRET is missing in .env")
-    if not ROOT_PASSWORD:
-        log.critical("MYSQL_ROOT_PASSWORD missing in .env")
-        raise SystemExit("MYSQL_ROOT_PASSWORD missing in .env")
-    if not MYSQL_PASSWORD:
-        log.critical("MYSQL_PASSWORD missing in .env")
-        raise SystemExit("ERROR: MYSQL_PASSWORD missing in .env")
-    
 
 def ensure_database():
     """ ensures database is available. creates database, user and table if not."""
