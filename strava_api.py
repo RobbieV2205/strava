@@ -26,8 +26,10 @@ TOKEN_URL = "https://www.strava.com/oauth/token"
 
 
 def get_access_token() -> str:
+    """" gets acces token from .env file & refreshes if necessary. """
+
     if not TOKEN_FILE.exists():
-        raise SystemExit("ERROR: no tokens found ren auth.py first.")
+        raise SystemExit("ERROR: no tokens found run auth.py first.")
     tokens = json.loads(TOKEN_FILE.read_text())
     if tokens.get("expires_at", 0) < time.time() + 60:
         log.info("[auth] Token expired — renewing token...")
@@ -45,6 +47,8 @@ def get_access_token() -> str:
 
 
 def _api_get(endpoint: str, token: str, params: dict | None = None) -> list | dict:
+    """ gets and returns api connection to strava api. """
+
     resp = requests.get(
         f"{BASE_URL}{endpoint}",
         headers={"Authorization": f"Bearer {token}"},
@@ -60,6 +64,8 @@ def _api_get(endpoint: str, token: str, params: dict | None = None) -> list | di
 
 
 def fetch_all_runs(token: str) -> list[dict]:
+    """ uses _api_get to receive data from strava api and returns them to be written in database. """
+
     runs, page = [], 1
     log.info("[strava] getting activities...")
     while True:

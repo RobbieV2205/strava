@@ -36,7 +36,8 @@ SYNC_INTERVAL_SECONDS = 6 * 60 * 60  # 6 uur
 
 
 def ensure_env():
-    """ ensures .env is available. raises error and stops if not."""
+    """ ensures .env is available and if necessary data is available. raises error and stops if not."""
+
     if not _ENV_PATH.exists():
         raise SystemExit(
             f".env file not found."

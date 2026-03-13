@@ -85,6 +85,8 @@ COLUMNS = [
 
 
 def setup_database():
+    """ Creates database, sql user and table in mysql database. """
+
     log.info(f"[setup] connect as root with: {MYSQL_HOST}:{MYSQL_PORT}...")
     conn = mysql.connector.connect(
         host=MYSQL_HOST, port=MYSQL_PORT,
@@ -112,13 +114,16 @@ def setup_database():
 
     cur.execute(f"USE `{MYSQL_DATABASE}`;")
     cur.execute(CREATE_TABLE_SQL)
+
     conn.commit()
-    log.info(f"[setup] Table ready in `{MYSQL_DATABASE}`.")
+
     cur.close()
     conn.close()
     
 
 def connect() -> mysql.connector.MySQLConnection:
+    """ creates and returns active mysql database connection. """
+
     return mysql.connector.connect(
         host=MYSQL_HOST, port=MYSQL_PORT,
         user=MYSQL_USER, password=MYSQL_PASSWORD,
@@ -127,6 +132,8 @@ def connect() -> mysql.connector.MySQLConnection:
 
 
 def _parse_datetime(value: str | None) -> str | None:
+    """ formats date to right format """
+
     if not value:
         return None
     try:
@@ -136,6 +143,8 @@ def _parse_datetime(value: str | None) -> str | None:
 
 
 def _coerce(col: str, value):
+    """ makes sure the data is in the right format before written in database. used in upsert_runs """
+
     if value is None:
         return None
     if col in ("start_date", "start_date_local"):
@@ -148,6 +157,8 @@ def _coerce(col: str, value):
 
 
 def upsert_runs(conn, runs: list[dict]):
+    """ uses fetch_all_runs to collect and write runs to database """
+
     all_cols     = ["id"] + COLUMNS
     col_list     = ", ".join(f"`{c}`" for c in all_cols)
     placeholders = ", ".join(["%s"] * len(all_cols))
