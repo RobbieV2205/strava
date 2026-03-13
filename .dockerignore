@@ -1,0 +1,8 @@
+.git/
+.venv/
+.env
+strava_tokens.json
+strava_sync.log
+__pycache__/
+scripts/
+*.md
