@@ -5,13 +5,14 @@ Strava Sync
 Creates database and user (if needed) and sync's all runs to database.
 """
 
+
 import time
 import logging
+import mysql.connector
 import logging.handlers
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
-import mysql.connector
 
 
 # Configure the logging system.
@@ -35,25 +36,16 @@ SYNC_INTERVAL_SECONDS = 6 * 60 * 60  # 6 uur
 
 
 def ensure_env():
-    """ ensures .env is available. raises error and stops if not."""
+    """ ensures .env is available and if necessary data is available. raises error and stops if not."""
+
     if not _ENV_PATH.exists():
         raise SystemExit(
             f".env file not found."
         )
-    load_dotenv(_ENV_PATH)
-
-
-def sync_once():
-    """funtion used in the loop the sync the strava data to the database. """
-
     load_dotenv(_ENV_PATH, override=True)
-
-    # Collect necessary data from .env variables
-    from database import (
-        ROOT_PASSWORD, MYSQL_PASSWORD, MYSQL_USER, MYSQL_DATABASE, MYSQL_HOST,
-        setup_database, connect, ensure_table, upsert_runs,
-    )
-    from strava_api import CLIENT_ID, CLIENT_SECRET, get_access_token, fetch_all_runs
+    
+    from database import ROOT_PASSWORD, MYSQL_PASSWORD, ROOT_PASSWORD, MYSQL_PASSWORD
+    from strava_api import CLIENT_ID, CLIENT_SECRET
 
     if not CLIENT_ID or not CLIENT_SECRET:
         raise RuntimeError("STRAVA_CLIENT_ID or STRAVA_CLIENT_SECRET is missing in .env")
@@ -61,16 +53,29 @@ def sync_once():
         raise RuntimeError("MYSQL_ROOT_PASSWORD missing in .env")
     if not MYSQL_PASSWORD:
         raise RuntimeError("MYSQL_PASSWORD missing in .env")
+    
 
+def ensure_database():
+    """ ensures database is available. creates database, user and table if not."""
+    
+    from database import setup_database, connect
+    
     try:
         conn = connect()
     except mysql.connector.Error:
         setup_database()
-        conn = connect()
 
-    ensure_table(conn)
+
+def sync_once():
+    """funtion used in the loop the sync the strava data to the database. """
+
+    load_dotenv(_ENV_PATH, override=True)
+
+    from database import connect, upsert_runs
+    from strava_api import get_access_token, fetch_all_runs
 
     token = get_access_token()
+    conn = connect()
 
     runs = fetch_all_runs(token)
     if runs:
@@ -83,19 +88,7 @@ def sync_once():
 
 def main():
     ensure_env()
-
-    from database import ROOT_PASSWORD, MYSQL_PASSWORD
-    from strava_api import CLIENT_ID, CLIENT_SECRET
-
-    if not CLIENT_ID or not CLIENT_SECRET:
-        log.critical("STRAVA_CLIENT_ID or STRAVA_CLIENT_SECRET is missing in .env")
-        raise SystemExit("STRAVA_CLIENT_ID or STRAVA_CLIENT_SECRET is missing in .env")
-    if not ROOT_PASSWORD:
-        log.critical("MYSQL_ROOT_PASSWORD missing in .env")
-        raise SystemExit("MYSQL_ROOT_PASSWORD missing in .env")
-    if not MYSQL_PASSWORD:
-        log.critical("MYSQL_PASSWORD missing in .env")
-        raise SystemExit("ERROR: MYSQL_PASSWORD missing in .env")
+    ensure_database()
 
     log.info("=" * 60)
     log.info("Server started — sync each %d uur. Logfile: %s", SYNC_INTERVAL_SECONDS // 3600, _LOG_PATH)

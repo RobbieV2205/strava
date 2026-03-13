@@ -5,18 +5,16 @@ database.py
 file with all the functions used to setup, read and write the database. 
 """
 
+
 import json
 import logging
 import os
 from datetime import datetime
 import mysql.connector
 from dotenv import load_dotenv
-
 log = logging.getLogger(__name__)
-
 load_dotenv()
 
-# ── Config ────────────────────────────────────────────────────────────────────
 
 MYSQL_HOST     = os.getenv("MYSQL_HOST", "localhost")
 MYSQL_PORT     = int(os.getenv("MYSQL_PORT", 3306))
@@ -26,7 +24,6 @@ MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
 ROOT_USER      = os.getenv("MYSQL_ROOT_USER", "root")
 ROOT_PASSWORD  = os.getenv("MYSQL_ROOT_PASSWORD", "")
 
-# ── SQL ───────────────────────────────────────────────────────────────────────
 
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS runs (
@@ -72,6 +69,7 @@ CREATE TABLE IF NOT EXISTS runs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 """
 
+
 COLUMNS = [
     "name", "sport_type", "distance", "moving_time", "elapsed_time",
     "total_elevation_gain", "elev_high", "elev_low",
@@ -85,10 +83,11 @@ COLUMNS = [
     "flagged", "workout_type", "description",
 ]
 
-# ── Setup ─────────────────────────────────────────────────────────────────────
 
 def setup_database():
-    print(f"[setup] connect as root with: {MYSQL_HOST}:{MYSQL_PORT}...")
+    """ Creates database, sql user and table in mysql database. """
+
+    log.info(f"[setup] connect as root with: {MYSQL_HOST}:{MYSQL_PORT}...")
     conn = mysql.connector.connect(
         host=MYSQL_HOST, port=MYSQL_PORT,
         user=ROOT_USER, password=ROOT_PASSWORD,
@@ -98,7 +97,7 @@ def setup_database():
         f"CREATE DATABASE IF NOT EXISTS `{MYSQL_DATABASE}` "
         f"CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
     )
-    print(f"[setup] Database `{MYSQL_DATABASE}` ready.")
+    log.info(f"[setup] Database `{MYSQL_DATABASE}` ready.")
     cur.execute(
         f"CREATE USER IF NOT EXISTS '{MYSQL_USER}'@'%' IDENTIFIED BY '{MYSQL_PASSWORD}';"
     )
@@ -111,28 +110,30 @@ def setup_database():
     )
     cur.execute("FLUSH PRIVILEGES;")
 
-    print(f"[setup] User `{MYSQL_USER}` setup with the correct credentials `{MYSQL_DATABASE}`.")
+    log.info(f"[setup] User `{MYSQL_USER}` setup with the correct credentials `{MYSQL_DATABASE}`.")
+
+    cur.execute(f"USE `{MYSQL_DATABASE}`;")
+    cur.execute(CREATE_TABLE_SQL)
+
+    conn.commit()
+
     cur.close()
     conn.close()
-
-
-def ensure_table(conn):
-    cur = conn.cursor()
-    cur.execute(CREATE_TABLE_SQL)
-    conn.commit()
-    cur.close()
-
+    
 
 def connect() -> mysql.connector.MySQLConnection:
+    """ creates and returns active mysql database connection. """
+
     return mysql.connector.connect(
         host=MYSQL_HOST, port=MYSQL_PORT,
         user=MYSQL_USER, password=MYSQL_PASSWORD,
         database=MYSQL_DATABASE,
     )
 
-# ── Upsert ────────────────────────────────────────────────────────────────────
 
 def _parse_datetime(value: str | None) -> str | None:
+    """ formats date to right format """
+
     if not value:
         return None
     try:
@@ -142,6 +143,8 @@ def _parse_datetime(value: str | None) -> str | None:
 
 
 def _coerce(col: str, value):
+    """ makes sure the data is in the right format before written in database. used in upsert_runs """
+
     if value is None:
         return None
     if col in ("start_date", "start_date_local"):
@@ -154,6 +157,8 @@ def _coerce(col: str, value):
 
 
 def upsert_runs(conn, runs: list[dict]):
+    """ uses fetch_all_runs to collect and write runs to database """
+
     all_cols     = ["id"] + COLUMNS
     col_list     = ", ".join(f"`{c}`" for c in all_cols)
     placeholders = ", ".join(["%s"] * len(all_cols))
