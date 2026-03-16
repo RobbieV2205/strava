@@ -9,7 +9,7 @@ COPY main.py database.py strava_api.py ./
 
 CMD ["python", "main.py"]
 
-# docker build -t strava-sync .
+# docker build -t strava-sync
 
 # docker run -d --name strava-sync 
 #  -v /pad/naar/strava/.env:/app/.env:ro \
