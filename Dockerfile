@@ -1,16 +1,23 @@
-FROM python:3.11-slim
+FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY go.mod go.sum ./
+RUN go mod download
 
-COPY main.py database.py strava_api.py ./
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o strava-sync .
 
-CMD ["python", "main.py"]
+FROM alpine:3.19
 
-# docker build -t strava-sync
+WORKDIR /app
 
-# docker run -d --name strava-sync 
+COPY --from=builder /app/strava-sync .
+
+CMD ["./strava-sync"]
+
+# docker build -t strava-sync .
+
+# docker run -d --name strava-sync \
 #  -v /pad/naar/strava/.env:/app/.env:ro \
 #  -v /pad/naar/strava/strava_tokens.json:/app/strava_tokens.json strava-sync
