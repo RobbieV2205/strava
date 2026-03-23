@@ -81,13 +81,27 @@ def ensure_database():
 
 def sync_once():
     """funtion used in the loop the sync the strava data to the database. """
-
-    load_dotenv(_ENV_PATH, override=True)
-
-    token = get_access_token()
-    conn = connect()
-    runs = fetch_all_runs(token)
     
+    try:
+        load_dotenv(_ENV_PATH, override=True)
+    except Exception as exc:
+        log.exception("Failed loading .env file: %s", exc)
+
+    try:    
+        token = get_access_token()
+    except Exception as exc:
+        log.exception("Failed loading access tokens: %s", exc)
+
+    try:
+        conn = connect()
+    except Exception as exc:
+        log.exception("Failed connecting to database: %s", exc)
+
+    try:
+        runs = fetch_all_runs(token)
+    except Exception as exc:
+        log.exception("Failed receiving data from strava api: %s", exc)
+
     if runs:
         upsert_runs(conn, runs)
     else:

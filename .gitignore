@@ -2,3 +2,7 @@
 .env
 strava_tokens.json
 __pycache__/
+.ai
+.idea
+.claude
+strava_sync.log
